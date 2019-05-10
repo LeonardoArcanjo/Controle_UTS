@@ -1,3 +1,21 @@
+/* Titulo: Controle_UTS
+   Autor: Leonardo Arcanjo - OPTIMA/UFAM
+   Ano: 2019
+   Versao: 1.4
+   Resumo: Controlador para modulo Deslocador UTS-CC, modelo com motor DC. O programa utiliza
+           as interrupcoes do Arduino Mega para leitura dos pinos, "A", "B" e "index", do
+           encoder rotativo de quadratura. Eh utilizada uma fonte de 12V/3A com regulador de
+           tensao para 5V para alimentacao do deslocador e uma Ponte H para alimentacao/controle
+           do motor DC do deslocador.
+   Atualizacao:
+           v1.3
+          -> Correção do valor do fator multiplicativo de 5000 para 10000;
+          -> mudança dos pinos de controle da Ponte H L298N (8,9,10) -> (5,6,7);
+          -> mudança dos pinos das chaves de fim de curso e mechanical_zero;
+          -> mudança dos pinos de interrupção;
+          -> Remoção de algumas instruções Serial de debug, pois interferem na comunicação com o
+          processing;
+*/
 #define pwm 5
 #define chaveA 26       //pino 18 EOR-  
 #define chaveB 22       //pino 17 EOR+
@@ -5,9 +23,10 @@
 #define encoderAb 18    //pino 23 Ab
 #define encoderBb 2     //pino 24 Bb
 #define index 21        //pino 15 Index
-//#define INA 7
-//#define INB 6
 
+/*
+  INA = 7 e INB = 6
+*/
 /*
   Os pinos 20 = encoderA, 19 = encoderB e 3 = indexb foram omitidos
   do #define porque sao entrada de interrupcao
@@ -37,7 +56,6 @@ char menu(void);
 
 void setup() {
   Serial.begin(9600);                           // Inicialização da Com. Serial
-  //Serial.setTimeout(5000);                     // Tempo de espera para escrita do valor de passos
   pinMode(chaveA, INPUT);                       // Definicao das entradas
   pinMode(chaveB, INPUT);
   pinMode(MechZero, INPUT);
@@ -179,14 +197,8 @@ void go_volta() {
 
 void go_pos() {
   float dist = Serial.parseFloat();          //Le o valor desejado no buffer serial
-  if (Serial.read() == '\n') {
-    //Serial.print("Distancia desejada: ");
-    //Serial.print(dist, 4);
-    //Serial.println(" mm");
-  }
-  valor_ref = dist * 5000;
-  //Serial.print("quantidade de pulsos: ");
-  //Serial.println(valor_ref);
+  if (Serial.read() == '\n');
+  valor_ref = dist * 10000;
   delay(10);
   if (valor_ref > pulse_count) {
     ida();
@@ -210,9 +222,7 @@ void ida() {
     if (Serial.read() == 'P') break;
   } while (pulse_count < valor_ref);
   motorstop();
-  //Serial.print("Valor do pulse count: ");
-  //Serial.println(pulse_count);
-  percorrido = (float)pulse_count/5000;
+  percorrido = (float)pulse_count/10000;
   Serial.println(percorrido,4);
 }
 
@@ -231,9 +241,7 @@ void volta() {
     if (Serial.read() == 'P') break;
   } while (pulse_count > valor_ref);
   motorstop();
-  //Serial.print("Valor do pulse count: ");
-  //Serial.println(pulse_count);
-  percorrido = (float)pulse_count/5000;
+  percorrido = (float)pulse_count/10000;
   Serial.println(percorrido,4);
 }
 
